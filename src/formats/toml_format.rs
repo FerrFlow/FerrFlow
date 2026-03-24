@@ -12,7 +12,6 @@ impl VersionFile for TomlVersionFile {
             .parse()
             .with_context(|| format!("Invalid TOML in {}", file_path.display()))?;
 
-        // Cargo.toml: [package] version
         if let Some(v) = doc
             .get("package")
             .and_then(|p| p.get("version"))
@@ -21,7 +20,6 @@ impl VersionFile for TomlVersionFile {
             return Ok(v.to_string());
         }
 
-        // pyproject.toml: [project] version
         if let Some(v) = doc
             .get("project")
             .and_then(|p| p.get("version"))
@@ -30,7 +28,6 @@ impl VersionFile for TomlVersionFile {
             return Ok(v.to_string());
         }
 
-        // pyproject.toml (poetry): [tool.poetry] version
         if let Some(v) = doc
             .get("tool")
             .and_then(|t| t.get("poetry"))

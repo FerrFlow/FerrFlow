@@ -14,10 +14,8 @@ pub struct Config {
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct WorkspaceConfig {
-    /// Git remote name (default: origin)
     #[serde(default = "default_remote")]
     pub remote: String,
-    /// Branch to release from (default: main)
     #[serde(default = "default_branch")]
     pub branch: String,
 }
@@ -36,7 +34,6 @@ pub struct PackageConfig {
     #[serde(default)]
     pub versioned_files: Vec<VersionedFile>,
     pub changelog: Option<String>,
-    /// Paths that, if changed, also trigger a bump for this package
     #[serde(default)]
     pub shared_paths: Vec<String>,
 }

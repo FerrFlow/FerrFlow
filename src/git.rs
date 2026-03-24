@@ -17,7 +17,6 @@ pub fn get_repo_root(repo: &Repository) -> Result<PathBuf> {
         .ok_or_else(|| anyhow::anyhow!("Bare repositories are not supported"))
 }
 
-/// Get commits since the last tag matching `tag_prefix`, or all commits if none.
 pub fn get_commits_since_last_tag(repo: &Repository, tag_prefix: &str) -> Result<Vec<GitLog>> {
     let last_tag_oid = find_last_tag_commit(repo, tag_prefix)?;
 
@@ -55,7 +54,6 @@ fn find_last_tag_commit(repo: &Repository, prefix: &str) -> Result<Option<git2::
         let name = String::from_utf8_lossy(name);
         let tag_name = name.trim_start_matches("refs/tags/");
         if tag_name.starts_with(prefix) {
-            // Resolve tag to commit
             let commit_oid = if let Ok(tag_obj) = repo.find_tag(oid) {
                 tag_obj.target_id()
             } else {
@@ -98,7 +96,6 @@ pub fn get_changed_files(repo: &Repository) -> Result<Vec<String>> {
         )?;
         files
     } else {
-        // First commit
         let mut files = Vec::new();
         head_tree.walk(git2::TreeWalkMode::PreOrder, |_, entry| {
             if let Some(name) = entry.name() {

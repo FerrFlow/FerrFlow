@@ -14,7 +14,10 @@ pub fn generate_only(dry_run: bool) -> Result<()> {
     let config = Config::load(&root)?;
 
     if config.packages.is_empty() {
-        println!("{}", "No packages configured.".yellow());
+        println!(
+            "{}",
+            "No packages configured. Run `ferrflow init` to create a ferrflow.toml.".yellow()
+        );
         return Ok(());
     }
 
@@ -37,23 +40,43 @@ pub fn generate_only(dry_run: bool) -> Result<()> {
         }
 
         let Some(vf) = pkg.versioned_files.first() else {
+            println!(
+                "{}",
+                format!(
+                    "  Skipping {}: no versioned_files configured, cannot determine version.",
+                    pkg.name
+                )
+                .yellow()
+            );
             continue;
         };
 
         let current_version = read_version(vf, &root)?;
         let new_version = bump_version(&current_version, bump)?;
 
-        if let Some(changelog_rel) = &pkg.changelog {
-            let changelog_path = root.join(changelog_rel);
-            update_changelog(
-                &changelog_path,
-                &pkg.name,
-                &new_version,
-                &commits,
-                bump,
-                dry_run,
-            )?;
-        }
+        let changelog_path = match &pkg.changelog {
+            Some(rel) => root.join(rel),
+            None => {
+                println!(
+                    "{}",
+                    format!(
+                        "  No changelog configured for '{}', defaulting to CHANGELOG.md.",
+                        pkg.name
+                    )
+                    .yellow()
+                );
+                root.join("CHANGELOG.md")
+            }
+        };
+
+        update_changelog(
+            &changelog_path,
+            &pkg.name,
+            &new_version,
+            &commits,
+            bump,
+            dry_run,
+        )?;
     }
 
     Ok(())

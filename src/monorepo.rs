@@ -183,8 +183,14 @@ fn run_release_logic(root: &Path, config: &Config, dry_run: bool, verbose: bool)
             && let Some(slug) = get_repo_slug(&repo, &config.workspace.remote)
         {
             for (tag_name, _, body) in &tags_to_create {
-                create_github_release(&token, &slug, tag_name, body)?;
-                println!("  ✓ GitHub Release {}", tag_name.cyan());
+                match create_github_release(&token, &slug, tag_name, body) {
+                    Ok(()) => println!("  ✓ GitHub Release {}", tag_name.cyan()),
+                    Err(err) => eprintln!(
+                        "{}",
+                        format!("  Warning: failed to create GitHub Release for {tag_name}: {err}")
+                            .yellow()
+                    ),
+                }
             }
         }
     }

@@ -25,7 +25,7 @@ jobs:
             binary: ferrflow
             archive: ferrflow-linux-arm64.tar.gz
           - target: x86_64-apple-darwin
-            os: macos-13
+            os: macos-latest
             binary: ferrflow
             archive: ferrflow-darwin-x64.tar.gz
           - target: aarch64-apple-darwin

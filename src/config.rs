@@ -218,11 +218,13 @@ impl Config {
             .with_context(|| format!("Config file not found: {}", path.display()))?;
 
         let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
-        let handler: &dyn ConfigFormatHandler = match filename {
-            "ferrflow.json5" => &Json5Format,
-            "ferrflow.toml" => &TomlFormat,
-            ".ferrflow" => &DotfileFormat,
+        let handler: &dyn ConfigFormatHandler = match ext {
+            "json5" => &Json5Format,
+            "toml" => &TomlFormat,
+            "json" => &JsonFormat,
+            _ if filename == ".ferrflow" => &DotfileFormat,
             _ => &JsonFormat,
         };
 

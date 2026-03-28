@@ -98,8 +98,6 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    outputs:
-      results: ${{ steps.bench.outputs.results }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -126,12 +124,7 @@ jobs:
       - name: Generate fixtures
         run: bash benchmarks/fixtures/generate.sh benchmarks/fixtures
       - name: Run benchmarks
-        id: bench
-        run: |
-          RESULTS=$(bash benchmarks/run.sh)
-          echo "results<<BENCH_EOF" >> $GITHUB_OUTPUT
-          echo "$RESULTS" >> $GITHUB_OUTPUT
-          echo "BENCH_EOF" >> $GITHUB_OUTPUT
+        run: bash benchmarks/run.sh
       - name: Check for regressions
         run: bash benchmarks/compare.sh benchmarks/results/baseline.json benchmarks/results/latest.json
       - name: Update baseline
@@ -165,36 +158,7 @@ jobs:
       - name: Configure git
         run: git remote set-url origin https://x-access-token:${{ secrets.FERRFLOW_TOKEN }}@github.com/${{ github.repository }}
       - uses: FerrFlow-Org/ferrflow@v0
-        id: ferrflow
         with:
           dry_run: ${{ inputs.dry_run }}
         env:
           GITHUB_TOKEN: ${{ secrets.FERRFLOW_TOKEN }}
-      - name: Append benchmark results to release
-        if: needs.benchmark.outputs.results != ''
-        env:
-          GH_TOKEN: ${{ secrets.FERRFLOW_TOKEN }}
-        run: |
-          # Find the latest release created by ferrflow
-          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$TAG" ]; then
-            echo "No tag found, skipping benchmark append"
-            exit 0
-          fi
-
-          # Check if a release exists for this tag
-          if ! gh release view "$TAG" --json tagName -q '.tagName' >/dev/null 2>&1; then
-            echo "No release found for tag $TAG, skipping"
-            exit 0
-          fi
-
-          # Get current release body
-          CURRENT_BODY=$(gh release view "$TAG" --json body -q '.body' 2>/dev/null || echo "")
-
-          # Append benchmark results
-          BENCH_RESULTS='${{ needs.benchmark.outputs.results }}'
-          if [ -n "$BENCH_RESULTS" ]; then
-            NEW_BODY=$(printf '%s\n\n---\n\n## Performance\n\n%s' "$CURRENT_BODY" "$BENCH_RESULTS")
-            gh release edit "$TAG" --notes "$NEW_BODY"
-            echo "Benchmark results appended to release $TAG"
-          fi

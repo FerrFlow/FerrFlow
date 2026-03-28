@@ -57,8 +57,18 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          token: ${{ secrets.FERRFLOW_TOKEN }}
+      - name: Configure git
+        run: |
+          git config user.email "ferrflow-bot@users.noreply.github.com"
+          git config user.name "ferrflow-bot"
+          git remote set-url origin https://x-access-token:${{ secrets.FERRFLOW_TOKEN }}@github.com/${{ github.repository }}
       - uses: dtolnay/rust-toolchain@nightly
       - uses: Swatinem/rust-cache@v2
+      - name: Install hyperfine
+        run: cargo install hyperfine
+      - name: Install jq
+        run: sudo apt-get install -y jq
       - name: Build ferrflow
         run: cargo build --release
       - name: Add ferrflow to PATH
@@ -75,6 +85,13 @@ jobs:
           echo "results<<BENCH_EOF" >> $GITHUB_OUTPUT
           echo "$RESULTS" >> $GITHUB_OUTPUT
           echo "BENCH_EOF" >> $GITHUB_OUTPUT
+      - name: Check for regressions
+        run: bash benchmarks/compare.sh benchmarks/results/baseline.json benchmarks/results/latest.json
+      - name: Update baseline
+        run: |
+          cp benchmarks/results/latest.json benchmarks/results/baseline.json
+          git add benchmarks/results/baseline.json
+          git diff --cached --quiet || (git commit -m "chore(bench): update baseline" && git push)
 
   release:
     name: Release

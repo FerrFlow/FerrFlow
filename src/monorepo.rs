@@ -240,7 +240,7 @@ fn run_release_logic(root: &Path, config: &Config, dry_run: bool, verbose: bool)
             .iter()
             .map(|(_, _, _, name, ver)| format!("{name} v{ver}"))
             .collect();
-        let skip_ci = if mode == ReleaseCommitMode::Commit {
+        let skip_ci = if config.workspace.effective_skip_ci() {
             " [skip ci]"
         } else {
             ""

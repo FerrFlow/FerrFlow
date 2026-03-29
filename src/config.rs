@@ -44,6 +44,15 @@ pub struct WorkspaceConfig {
     pub release_commit_mode: ReleaseCommitMode,
     #[serde(default = "default_auto_merge", alias = "autoMergeReleases")]
     pub auto_merge_releases: bool,
+    #[serde(default, alias = "skipCi")]
+    pub skip_ci: Option<bool>,
+}
+
+impl WorkspaceConfig {
+    pub fn effective_skip_ci(&self) -> bool {
+        self.skip_ci
+            .unwrap_or(self.release_commit_mode == ReleaseCommitMode::Commit)
+    }
 }
 
 fn default_auto_merge() -> bool {
@@ -202,6 +211,7 @@ const CAMEL_CASE_KEYS: &[&str] = &[
     "recover_missed_releases",
     "release_commit_mode",
     "auto_merge_releases",
+    "skip_ci",
 ];
 
 fn to_camel_case_keys(value: serde_json::Value) -> serde_json::Value {

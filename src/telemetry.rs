@@ -2,9 +2,20 @@ use serde::Serialize;
 
 const DEFAULT_API_URL: &str = "https://api.ferrflow.com";
 
+#[derive(Debug, Clone, Copy, Serialize)]
+#[serde(rename_all = "snake_case")]
+#[allow(dead_code)]
+pub enum EventType {
+    Check,
+    Release,
+    VersionBump,
+    Init,
+    Error,
+}
+
 #[derive(Serialize)]
 struct EventPayload {
-    event_type: String,
+    event_type: EventType,
     #[serde(skip_serializing_if = "Option::is_none")]
     package_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -25,7 +36,7 @@ fn api_url() -> String {
 }
 
 pub fn send_event(
-    event_type: &str,
+    event_type: EventType,
     package_name: Option<&str>,
     package_version: Option<&str>,
     metadata: Option<serde_json::Value>,
@@ -35,7 +46,7 @@ pub fn send_event(
     }
 
     let payload = EventPayload {
-        event_type: event_type.to_string(),
+        event_type,
         package_name: package_name.map(String::from),
         package_version: package_version.map(String::from),
         metadata,

@@ -53,7 +53,12 @@ struct CheckResult {
     packages: Vec<CheckPackage>,
 }
 
-pub fn check(config_path: Option<&Path>, verbose: bool, json: bool) -> Result<()> {
+pub fn check(
+    config_path: Option<&Path>,
+    verbose: bool,
+    json: bool,
+    channel: Option<&str>,
+) -> Result<()> {
     let repo = open_repo(&std::env::current_dir()?)?;
     let root = get_repo_root(&repo)?;
     let config = Config::load(&root, config_path)?;
@@ -63,7 +68,7 @@ pub fn check(config_path: Option<&Path>, verbose: bool, json: bool) -> Result<()
         println!();
     }
 
-    let result = run_release_logic(&root, &config, true, verbose, json, false);
+    let result = run_release_logic(&root, &config, true, verbose, json, false, channel);
 
     if config.workspace.anonymous_telemetry {
         telemetry::send_event(telemetry::EventType::Check, None, None);
@@ -77,6 +82,7 @@ pub fn release(
     dry_run: bool,
     verbose: bool,
     force: bool,
+    channel: Option<&str>,
 ) -> Result<()> {
     let repo = open_repo(&std::env::current_dir()?)?;
     let root = get_repo_root(&repo)?;
@@ -89,7 +95,7 @@ pub fn release(
     }
     println!();
 
-    run_release_logic(&root, &config, dry_run, verbose, false, force)
+    run_release_logic(&root, &config, dry_run, verbose, false, force, channel)
 }
 
 fn run_release_logic(
@@ -99,6 +105,7 @@ fn run_release_logic(
     verbose: bool,
     json: bool,
     force: bool,
+    _channel: Option<&str>,
 ) -> Result<()> {
     if config.packages.is_empty() {
         if json {

@@ -1205,4 +1205,48 @@ mod tests {
         assert_eq!(commits.len(), 1);
         assert!(commits[0].message.contains("new feature"));
     }
+
+    #[test]
+    fn get_commits_since_last_stable_tag_skips_prereleases() {
+        let (dir, repo) = init_repo();
+        create_commit_in_repo(&repo, dir.path(), "a.txt", "feat: initial");
+        create_annotated_tag(&repo, "v1.0.0", "Release v1.0.0");
+        create_commit_in_repo(&repo, dir.path(), "b.txt", "feat: beta feature");
+        create_annotated_tag(&repo, "v2.0.0-beta.1", "Release v2.0.0-beta.1");
+        create_commit_in_repo(&repo, dir.path(), "c.txt", "feat: another beta feature");
+        create_annotated_tag(&repo, "v2.0.0-beta.2", "Release v2.0.0-beta.2");
+        create_commit_in_repo(&repo, dir.path(), "d.txt", "fix: last fix");
+
+        // Stable commits should include everything since v1.0.0
+        let commits =
+            get_commits_since_last_stable_tag(&repo, "v", OrphanedTagStrategy::Warn).unwrap();
+        assert_eq!(commits.len(), 3);
+
+        // Regular commits should include only since v2.0.0-beta.2
+        let commits = get_commits_since_last_tag(&repo, "v", OrphanedTagStrategy::Warn).unwrap();
+        assert_eq!(commits.len(), 1);
+    }
+
+    #[test]
+    fn collect_all_tags_returns_tag_names() {
+        let (dir, repo) = init_repo();
+        create_commit_in_repo(&repo, dir.path(), "a.txt", "feat: initial");
+        create_annotated_tag(&repo, "v1.0.0", "Release v1.0.0");
+        create_commit_in_repo(&repo, dir.path(), "b.txt", "feat: second");
+        create_annotated_tag(&repo, "v1.1.0-beta.1", "Release v1.1.0-beta.1");
+
+        let tags = collect_all_tags(&repo);
+        assert!(tags.contains(&"v1.0.0".to_string()));
+        assert!(tags.contains(&"v1.1.0-beta.1".to_string()));
+    }
+
+    #[test]
+    fn is_prerelease_tag_detection() {
+        assert!(!is_prerelease_tag("v1.0.0", "v"));
+        assert!(is_prerelease_tag("v1.0.0-beta.1", "v"));
+        assert!(is_prerelease_tag("v2.0.0-rc.3", "v"));
+        assert!(!is_prerelease_tag("v2.0.0", "v"));
+        assert!(is_prerelease_tag("sdk@v1.0.0-dev.1", "sdk@v"));
+        assert!(!is_prerelease_tag("sdk@v1.0.0", "sdk@v"));
+    }
 }

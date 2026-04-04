@@ -103,6 +103,7 @@ fn setup_monorepo(dir: &Path, alpha_ver: &str, beta_ver: &str) {
 // ---------------------------------------------------------------------------
 
 #[test]
+#[ignore] // covered by fixture: monorepo-output-grouping
 fn monorepo_output_groups_packages_with_blank_line() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
@@ -190,6 +191,7 @@ fn single_package_output_no_double_blank_lines() {
 }
 
 #[test]
+#[ignore] // covered by fixture: single-package-nothing
 fn nothing_to_release_output_unchanged() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
@@ -257,6 +259,7 @@ fn monorepo_package_order_follows_config() {
 }
 
 #[test]
+#[ignore] // covered by fixture: monorepo-partial-touch
 fn monorepo_only_touched_package_in_output() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();

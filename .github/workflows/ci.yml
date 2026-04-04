@@ -412,3 +412,4 @@ jobs:
           subject-name: ghcr.io/ferrflow-org/ferrflow
           subject-digest: ${{ steps.docker-push.outputs.digest }}
           push-to-registry: true
+        continue-on-error: true
